@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Mak's Coach</title>
+<style>
+  :root {
+    --bg-deep: #04120E;
+    --bg-card: #09221A;
+    --bg-surface: #0F3327;
+    --emerald: #10B981;
+    --emerald-bright: #34D399;
+    --mint: #A7F3D0;
+    --text-main: #ECFDF5;
+    --text-muted: #6EE7B7;
+    --danger: #EF4444;
+    --warn: #F59E0B;
+    --border: rgba(16, 185, 129, 0.25);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { background: var(--bg-deep); color: var(--text-main); padding-bottom: 90px; }
+  .header { background: linear-gradient(135deg, #06281E, #04120E); padding: 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; }
+  .brand-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .brand-title { font-size: 18px; font-weight: 900; color: var(--emerald-bright); letter-spacing: 0.5px; }
+  .quote-box { background: rgba(16, 185, 129, 0.12); border-left: 4px solid var(--emerald); padding: 10px 12px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; font-weight: 600; color: var(--mint); }
+  .status-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .badge { padding: 5px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; letter-spacing: 0.4px; }
+  .badge-locked { background: rgba(239, 68, 68, 0.2); color: #FCA5A5; border: 1px solid var(--danger); }
+  .badge-unlocked { background: rgba(16, 185, 129, 0.25); color: var(--mint); border: 1px solid var(--emerald); }
+  .container { padding: 14px; max-width: 600px; margin: auto; }
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 14px; box-shadow: 0 6px 20px rgba(0,0,0,0.35); }
+  .card-title { font-size: 15px; font-weight: 700; color: var(--emerald-bright); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .btn { background: var(--emerald); color: #022C22; border: none; padding: 10px 14px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn-outline { background: transparent; color: var(--emerald-bright); border: 1px solid var(--emerald); }
+  .btn-warn { background: var(--warn); color: #1F2937; }
+  .btn-danger { background: rgba(239,68,68,0.2); color: #FCA5A5; border: 1px solid var(--danger); }
+  .btn-sm { padding: 6px 10px; font-size: 11px; border-radius: 8px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
+  .stat-box { background: var(--bg-surface); padding: 8px; border-radius: 10px; border: 1px solid var(--border); }
+  .stat-val { font-size: 16px; font-weight: 800; color: var(--text-main); }
+  .stat-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+  select, input, textarea { width: 100%; background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border); padding: 9px; border-radius: 8px; font-size: 13px; margin-bottom: 8px; }
+  .ex-item { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .ex-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .ex-name { font-weight: 700; font-size: 14px; color: var(--mint); }
+  .ex-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .safety-banner { background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); color: #FDE68A; padding: 8px 10px; border-radius: 8px; font-size: 11px; margin-bottom: 10px; line-height: 1.4; }
+  .timer-box { background: #02100C; border: 2px solid var(--emerald); border-radius: 12px; padding: 14px; text-align: center; margin: 10px 0; }
+  .timer-digits { font-size: 36px; font-weight: 900; color: var(--emerald-bright); font-variant-numeric: tabular-nums; }
+  .progress-bar { width: 100%; height: 8px; background: var(--bg-surface); border-radius: 99px; overflow: hidden; margin: 6px 0; }
+  .progress-fill { height: 100%; background: var(--emerald); transition: width 0.3s; }
+  .nav-bottom { position: fixed; bottom: 0; left: 0; right: 0; background: #061C15; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 8px 0; z-index: 99; }
+  .nav-btn { background: none; border: none; color: var(--text-muted); font-size: 11px; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 3px; opacity: 0.6; }
+  .nav-btn.active { color: var(--emerald-bright); opacity: 1; }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+  .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; align-items: center; justify-content: center; padding: 16px; }
+  .modal.open { display: flex; }
+  .modal-card { background: var(--bg-card); border: 1px solid var(--emerald); border-radius: 14px; padding: 16px; width: 100%; max-width: 480px; }
+  iframe { width: 100%; height: 230px; border-radius: 10px; border: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand-row">
+    <span class="brand-title">⚡ MAK'S COACH</span>
+    <button class="btn btn-sm btn-outline" onclick="openAccessibility()">⚙️ Guard Service</button>
+  </div>
+  <div class="quote-box" id="dailyQuote">"Suffer the pain of discipline or suffer the pain of regret. Execute today's plan."</div>
+  <div class="status-bar">
+    <span id="lockBadge" class="badge badge-locked">🔒 BROWSERS & YOUTUBE LOCKED</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- TAB 1: WORKOUT & TIMER -->
+  <div id="tab-workout" class="tab-pane active">
+
+    <div class="card">
+      <div class="card-title">
+        <span>🛡️ Monthly Discipline Score</span>
+        <span id="scaleFactorBadge" class="badge badge-unlocked">100% Load</span>
+      </div>
+      <div class="grid-4">
+        <div class="stat-box"><div class="stat-val" id="scoreDone">0</div><div class="stat-lbl">Workouts</div></div>
+        <div class="stat-box"><div class="stat-val" id="scoreSports">0</div><div class="stat-lbl">Tennis/Badm</div></div>
+        <div class="stat-box"><div class="stat-val" id="scoreSick">0</div><div class="stat-lbl">Sick/Out</div></div>
+        <div class="stat-box"><div class="stat-val" id="scoreMiss">0</div><div class="stat-lbl">Misses</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>🏋️ 1-Year Calisthenics + Hypertrophy</span>
+      </div>
+      <div class="safety-banner">
+        ⚠️ <b>Safety Protocol:</b> Exhale smoothly through every effort—never hold your breath or strain. Avoid maximal failure (leave 1–4 clean reps in reserve). Stop for wheezing, shoulder pain, or visual symptoms.
+      </div>
+
+      <label style="font-size:12px;color:var(--text-muted)">Select Active Training Phase & Session:</label>
+      <select id="phaseSelect" onchange="renderWorkout()">
+        <option value="w1_2">Weeks 1–2: Gentle Reconditioning (Full Body • RPE 5–6)</option>
+        <option value="w3_4">Weeks 3–4: Build the Base (Full Body • RPE 6–7)</option>
+        <option value="ppl_push">Months 2–10: PUSH (Incline/Bench/Shoulders/Triceps)</option>
+        <option value="ppl_pull">Months 2–10: PULL (Assisted Pull-Up/Rows/Rear Delt/Biceps)</option>
+        <option value="ppl_legs">Months 2–10: LEGS + CORE (Squat/RDL/Hip Thrust/Calves)</option>
+        <option value="m7_deload">Month 7: Lighter Technique & Deload Week (-40% Sets)</option>
+      </select>
+
+      <div class="ex-item" style="border-color: var(--warn);">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#FDE68A;">
+          <input type="checkbox" id="warmupCheck" style="width:18px;height:18px;margin:0;" onchange="saveState()">
+          🔥 5–8 Min Warm-Up Done (Stepper/March, Shoulder/Arm Circles, Band Pull-Aparts, 8 Squats)
+        </label>
+      </div>
+
+      <!-- Active Rest & Cadence Timer -->
+      <div class="timer-box">
+        <div style="font-size:12px;color:var(--text-muted)" id="timerStatus">READY FOR NEXT SET</div>
+        <div class="timer-digits" id="timerDisplay">00:00</div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
+          <button class="btn btn-sm" onclick="startRestTimer(90)">⏱️ 90s Compound Rest</button>
+          <button class="btn btn-sm btn-outline" onclick="startRestTimer(60)">⏱️ 60s Accessory Rest</button>
+          <button class="btn btn-sm btn-outline" onclick="voiceCadence()">🔊 Count Rep Cadence</button>
+        </div>
+      </div>
+
+      <div id="exerciseList"></div>
+
+      <button class="btn" style="width:100%;margin-top:8px;padding:14px;" onclick="completeWorkoutSession()">
+        ✅ Complete Workout & Unlock Browsers
+      </button>
+    </div>
+
+    <!-- Sick / Day Out / Tennis & Badminton Engine -->
+    <div class="card">
+      <div class="card-title"><span>🤒 Sick / Day Out / Tennis & Badminton</span></div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
+        Anti-loophole protection: Select reason and <b>Hold Button for 15 Seconds</b> to log an off/sport day and auto-adjust your next session workload.
+      </p>
+      <select id="offReason">
+        <option value="sports">🏸 Played Tennis / Badminton (Counts as Activity)</option>
+        <option value="sick">🤒 Sick Day (Recovery Hydration +500ml & Volume Adjust)</option>
+        <option value="dayout">✈️ Day Out / Travel (Roll Schedule Forward)</option>
+      </select>
+      <div class="progress-bar"><div class="progress-fill" id="holdBar" style="width:0%"></div></div>
+      <button class="btn btn-warn" style="width:100%"
+        onmousedown="startHold()" onmouseup="cancelHold()"
+        ontouchstart="startHold()" ontouchend="cancelHold()">
+        ⏳ Hold 15 Seconds to Confirm Day Status
+      </button>
+    </div>
+
+  </div>
+
+  <!-- TAB 2: DIET, MACROS & WATER -->
+  <div id="tab-diet" class="tab-pane">
+    <div class="card">
+      <div class="card-title">
+        <span>🥗 Remaining Daily Macros (Target: 125g Protein)</span>
+      </div>
+      <div class="grid-4" style="margin-bottom:10px;">
+        <div class="stat-box"><div class="stat-val" id="remP">125g</div><div class="stat-lbl">Protein Left</div></div>
+        <div class="stat-box"><div class="stat-val" id="remC">190g</div><div class="stat-lbl">Carbs Left</div></div>
+        <div class="stat-box"><div class="stat-val" id="remF">55g</div><div class="stat-lbl">Fats Left</div></div>
+        <div class="stat-box"><div class="stat-val" id="remK">1755</div><div class="stat-lbl">Kcal Left</div></div>
+      </div>
+
+      <div class="card-title" style="margin-top:12px;"><span>⚡ Quick-Punch Meals (Pre / Post / Daily)</span></div>
+      <div id="mealSlots"></div>
+
+      <hr style="border-color:var(--border);margin:12px 0;">
+      <div class="card-title"><span>➕ Add Custom Food Entry</span></div>
+      <input id="customFoodName" placeholder="Meal name (e.g., Paneer Bhurji + 2 Roti)">
+      <div class="grid-4">
+        <input id="customP" type="number" placeholder="Prot (g)">
+        <input id="customC" type="number" placeholder="Carb (g)">
+        <input id="customF" type="number" placeholder="Fat (g)">
+        <input id="customK" type="number" placeholder="Kcal">
+      </div>
+      <button class="btn" style="width:100%" onclick="addCustomMeal()">Punch Custom Meal</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>💧 Hydration Meter</span>
+        <span id="waterText">0 / 3500 ml</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="waterBar" style="width:0%"></div></div>
+      <div class="grid-2" style="margin-top:10px;">
+        <button class="btn btn-outline" onclick="addWater(250)">+250 ml (Glass)</button>
+        <button class="btn" onclick="addWater(500)">+500 ml (Bottle)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: PROGRESS & BODY TRACKER -->
+  <div id="tab-progress" class="tab-pane">
+    <div class="card">
+      <div class="card-title"><span>📉 Body Composition (85 kg → 80 kg Checkpoint)</span></div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">
+        Starting baseline: 6 ft (183 cm), 85.0 kg, 25–28% smart-scale estimate. Judge progress using weekly-average morning weight, waist, and strength together.
+      </p>
+      <div class="grid-2">
+        <input id="inWeight" type="number" step="0.1" placeholder="Morning Weight (kg)">
+        <input id="inWaist" type="number" step="0.1" placeholder="Waist (cm)">
+      </div>
+      <input id="inStrengthNote" placeholder="Best Set (e.g., Incline Push-up 3x12, DB Row 12kgx10)">
+      <input id="inRecoveryNote" placeholder="Sleep hours, energy & any shoulder/breathing notes">
+      <button class="btn" style="width:100%" onclick="saveCheckIn()">📌 Save Weekly Check-In</button>
+      <div id="checkInHistory" style="margin-top:12px;font-size:12px;"></div>
+    </div>
+  </div>
+
+  <!-- TAB 4: WORKSPACE (TASKS, POMODORO & NOTES) -->
+  <div id="tab-workspace" class="tab-pane">
+    <div class="card">
+      <div class="card-title"><span>🎯 Focus Pomodoro Timer</span></div>
+      <div class="timer-box">
+        <div class="timer-digits" id="pomoDisplay">25:00</div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
+          <button class="btn btn-sm" onclick="startPomo(25)">25m Focus</button>
+          <button class="btn btn-sm btn-outline" onclick="startPomo(5)">5m Break</button>
+          <button class="btn btn-sm btn-danger" onclick="stopPomo()">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>✅ Priority Tasks</span></div>
+      <div style="display:flex;gap:6px;">
+        <input id="taskInput" placeholder="Add a high-priority task...">
+        <button class="btn" onclick="addTask()" style="margin-bottom:8px;">Add</button>
+      </div>
+      <div id="taskList"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>📝 Auto-Saving Scratchpad</span></div>
+      <textarea id="scratchpad" rows="5" placeholder="Quick thoughts, project notes, workout adjustments..." oninput="saveScratch()"></textarea>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL: FORM CUES & RESTRICTED YOUTUBE SANDBOX -->
+<div class="modal" id="formModal">
+  <div class="modal-card">
+    <div class="card-title">
+      <span id="modalTitle">Exercise Form</span>
+      <button class="btn btn-sm btn-danger" onclick="closeModal()">✕ Close</button>
+    </div>
+    <p id="modalCues" style="font-size:13px;line-height:1.5;color:var(--mint);margin-bottom:10px;"></p>
+    <div id="videoContainer"></div>
+    <div class="grid-2" style="margin-top:10px;">
+      <button class="btn btn-outline" id="btnReadAloud">🔊 Voice Readout</button>
+      <button class="btn" id="btnAskGemini">🎙️ Ask Gemini Live</button>
+    </div>
+  </div>
+</div>
+
+<div class="nav-bottom">
+  <button class="nav-btn active" onclick="switchTab('workout', this)">🏋️<span>Workout</span></button>
+  <button class="nav-btn" onclick="switchTab('diet', this)">🥗<span>Diet & Water</span></button>
+  <button class="nav-btn" onclick="switchTab('progress', this)">📉<span>Tracker</span></button>
+  <button class="nav-btn" onclick="switchTab('workspace', this)">⚡<span>Workspace</span></button>
+</div>
+
+<script>
+const QUOTES = [
+  "Mak's Coach: Nobody cares what you planned to do. Execute today's sets and hit your protein.",
+  "Consistency, controlled technique, and recovery beat ego lifting every single time.",
+  "85 kg to lean strength is built one clean rep and one logged meal at a time.",
+  "Don't negotiate with weakness. Warm up for 5 minutes and start Set 1."
+];
+document.getElementById('dailyQuote').innerText = '"' + QUOTES[new Date().getDate() % QUOTES.length] + '"';
+
+const WORKOUT_PLANS = {
+  w1_2: [
+    { name: "Glute Bridge", sets: 2, reps: "10–12 reps", rest: 90, yt: "OUgsJ8-Vi0E", cues: "Lift smoothly, hold 1–2 seconds at the top, lower slowly. Exhale as hips rise; never hold your breath." },
+    { name: "Bodyweight Squat (Comfortable Depth)", sets: 2, reps: "8–10 reps", rest: 90, yt: "aclHkVaku9U", cues: "Sit back under control to a pain-free depth. Inhale down, exhale smoothly as you stand up." },
+    { name: "Incline Push-Up (Stable Bench)", sets: 2, reps: "6–10 reps", rest: 90, yt: "4dF1DOWzf20", cues: "Hands on stable bench. Move smoothly without bouncing. Stop with 3–5 good reps in reserve." },
+    { name: "Resistance Band Row", sets: 2, reps: "10–12 reps", rest: 90, yt: "GYHbu2LRqD0", cues: "Draw elbows back smoothly without shrugging shoulders. Exhale on the pull, control the return." },
+    { name: "Band-Assisted Pull-Up Practice", sets: 2, reps: "3–5 controlled reps", rest: 120, yt: "7yqu2G2577E", cues: "Use enough band assistance to avoid swinging or straining. Do not jump into hard negatives." },
+    { name: "Controlled Plank", sets: 2, reps: "15–25 seconds", rest: 60, yt: "pSHjTRCQxIw", cues: "Brace core while breathing continuously and rhythmically—never hold your breath." }
+  ],
+  w3_4: [
+    { name: "Glute Bridge", sets: 3, reps: "10–15 reps", rest: 90, yt: "OUgsJ8-Vi0E", cues: "Smooth 1–2s pause at top. Keep RPE 6–7 (2–4 reps in reserve)." },
+    { name: "Bodyweight Squat", sets: 3, reps: "8–12 reps", rest: 90, yt: "aclHkVaku9U", cues: "Controlled descent, chest proud, exhale smoothly on the way up." },
+    { name: "Incline Push-Up", sets: 3, reps: "8–12 reps", rest: 90, yt: "4dF1DOWzf20", cues: "Straight body line from head to heels. Exhale as you press away from the bench." },
+    { name: "Resistance Band Row", sets: 3, reps: "10–15 reps", rest: 90, yt: "GYHbu2LRqD0", cues: "Squeeze shoulder blades gently if pain-free; avoid jerking." },
+    { name: "Band-Assisted Pull-Up", sets: 3, reps: "3–6 reps", rest: 120, yt: "7yqu2G2577E", cues: "Smooth pull and controlled lowering without breath-holding." },
+    { name: "Plank + Low Box Step-Ups", sets: 3, reps: "20–30s + 6–10/leg", rest: 60, yt: "pSHjTRCQxIw", cues: "Keep whole foot on stable box, step down quietly without jumping." }
+  ],
+  ppl_push: [
+    { name: "Incline or Floor Push-Up", sets: 3, reps: "6–12 reps", rest: 120, yt: "IODxDxX7oi4", cues: "Double progression: reach 12 clean reps across all sets before lowering incline. Exhale on push." },
+    { name: "Dumbbell Bench Press / Band Chest Press", sets: 3, reps: "8–12 reps", rest: 120, yt: "VmB1G1K7v94", cues: "Lower dumbbells with control, exhale smoothly on press, leave 1–3 reps in reserve." },
+    { name: "Dumbbell Shoulder Press (Pain-Free/Cleared)", sets: 2, reps: "8–12 reps", rest: 90, yt: "qEwKCR5JCog", cues: "Only perform if shoulder is pain-free and cleared. Never strain or hold breath." },
+    { name: "Dumbbell / Band Lateral Raise", sets: 2, reps: "12–20 reps", rest: 60, yt: "3VcKaXpzqRo", cues: "Lead with elbows to shoulder height, smooth tempo, zero momentum." },
+    { name: "Band Triceps Extension", sets: 2, reps: "10–15 reps", rest: 60, yt: "2-LAMcpzODU", cues: "Pin elbows by your sides, extend smoothly and exhale." }
+  ],
+  ppl_pull: [
+    { name: "Band-Assisted Pull-Up Practice", sets: 3, reps: "3–6 reps", rest: 120, yt: "7yqu2G2577E", cues: "Reduce band assistance only when all reps are swing-free and controlled." },
+    { name: "One-Arm Bench-Supported Dumbbell Row", sets: 3, reps: "8–12 reps/side", rest: 120, yt: "pYcpY20QaE8", cues: "Support hand on bench, pull dumbbell toward hip, exhale through the effort." },
+    { name: "Seated Band or Dumbbell Row", sets: 2, reps: "10–15 reps", rest: 90, yt: "GYHbu2LRqD0", cues: "Smooth posture, keep neck relaxed, pause briefly at contraction." },
+    { name: "Band Pull-Aparts", sets: 2, reps: "12–20 reps", rest: 60, yt: "JObYtU7Y7ag", cues: "Gentle rear-delt and scapular stability work. Stop if shoulder blade feels uncomfortable." },
+    { name: "Dumbbell / Band Biceps Curl", sets: 2, reps: "10–15 reps", rest: 60, yt: "ykJmrZ5v0Oo", cues: "Full range of motion without swinging torso." }
+  ],
+  ppl_legs: [
+    { name: "Goblet Squat or Bodyweight Squat", sets: 3, reps: "8–15 reps", rest: 120, yt: "MeIiIdhvXT4", cues: "Hold dumbbell at chest if comfortable. Exhale on ascent, keep 1–3 reps in reserve." },
+    { name: "Dumbbell Romanian Deadlift", sets: 3, reps: "8–12 reps", rest: 120, yt: "JCXUYuzwNrM", cues: "Hinge at hips with neutral spine, feel hamstring stretch, exhale smoothly standing up." },
+    { name: "Floor Glute Bridge / Bench Hip Thrust", sets: 3, reps: "10–15 reps", rest: 90, yt: "OUgsJ8-Vi0E", cues: "1–2 second hold at top, smooth breathing throughout." },
+    { name: "Standing Calf Raise", sets: 3, reps: "12–20 reps", rest: 60, yt: "gwLzBJYoWlI", cues: "Full stretch at bottom, controlled pause at top." },
+    { name: "Dead Bug or Plank + Optional Low Step-Ups", sets: 3, reps: "10 reps / 8 step-ups", rest: 60, yt: "g_BYB0R-4Ws", cues: "No Bulgarian split squats. Keep low box step-ups controlled and non-jumping." }
+  ],
+  m7_deload: [
+    { name: "Deload Incline Push-Up", sets: 2, reps: "8 reps (3–4 RIR)", rest: 90, yt: "4dF1DOWzf20", cues: "Lighter technique week (-40% volume). Focus on effortless form and breathing." },
+    { name: "Deload Supported Row", sets: 2, reps: "10 reps (3–4 RIR)", rest: 90, yt: "pYcpY20QaE8", cues: "Smooth tempo, zero strain." },
+    { name: "Deload Bodyweight Squat & Glute Bridge", sets: 2, reps: "10 reps each", rest: 90, yt: "aclHkVaku9U", cues: "Crisp movement quality for recovery." }
+  ]
+};
+
+const PRESET_MEALS = [
+  { id: "pre", slot: "⚡ Pre-Workout Snack (No Fasted Training)", name: "1 Banana + 5 Almonds / Light Snack", p: 4, c: 28, f: 4, k: 160 },
+  { id: "post", slot: "🔋 Post-Workout Recovery", name: "Whey Scoop OR 4 Egg Whites + 2 Whole Eggs", p: 28, c: 4, f: 10, k: 220 },
+  { id: "m1", slot: "🍳 Meal 1 (Breakfast / Lunch)", name: "150g Chicken Breast OR 150g Paneer + 2 Roti", p: 38, c: 45, f: 14, k: 460 },
+  { id: "m2", slot: "🍲 Meal 2 (Afternoon)", name: "2 Bowls Dal Tadka + Curd + Beans/Chana Salad", p: 24, c: 55, f: 8, k: 390 },
+  { id: "m3", slot: "🍽️ Meal 3 (Dinner)", name: "150g Grilled Chicken / Paneer + Veggies & 1 Roti", p: 34, c: 25, f: 12, k: 345 }
+];
+
+let state = JSON.parse(localStorage.getItem("maks_coach_state") || "null") || {
+  phase: "w1_2",
+  completedSets: {},
+  punchedMeals: {},
+  customMeals: [],
+  water: 0,
+  waterTarget: 3500,
+  score: { done: 0, sports: 0, sick: 0, miss: 0 },
+  scaleFactor: 1.0,
+  checkIns: [],
+  tasks: [],
+  scratch: ""
+};
+
+function saveState() {
+  localStorage.setItem("maks_coach_state", JSON.stringify(state));
+  updateTopLockBadge();
+}
+
+function updateTopLockBadge() {
+  const badge = document.getElementById("lockBadge");
+  let unlocked = false;
+  if (window.AndroidBridge && AndroidBridge.isUnlockedToday()) unlocked = true;
+  if (state.unlockedDate === new Date().toISOString().slice(0,10)) unlocked = true;
+
+  if (unlocked) {
+    badge.className = "badge badge-unlocked";
+    badge.innerText = "🔓 UNLOCKED FOR TODAY";
+  } else {
+    badge.className = "badge badge-locked";
+    badge.innerText = "🔒 BROWSERS & YOUTUBE LOCKED";
+  }
+}
+
+function renderWorkout() {
+  const sel = document.getElementById("phaseSelect");
+  state.phase = sel.value;
+  const list = document.getElementById("exerciseList");
+  list.innerHTML = "";
+  const exercises = WORKOUT_PLANS[state.phase] || [];
+
+  exercises.forEach((ex, idx) => {
+    const scaledSets = Math.max(1, Math.round(ex.sets * state.scaleFactor));
+    const key = state.phase + "_" + idx;
+    const doneSets = state.completedSets[key] || 0;
+
+    const div = document.createElement("div");
+    div.className = "ex-item";
+    div.innerHTML = `
+      <div class="ex-header">
+        <div>
+          <div class="ex-name">${idx + 1}. ${ex.name}</div>
+          <div class="ex-meta">Target: <b>${scaledSets} sets × ${ex.reps}</b> • Rest: ${ex.rest}s</div>
+        </div>
+        <span class="badge ${doneSets >= scaledSets ? 'badge-unlocked' : 'badge-locked'}">${doneSets}/${scaledSets} Sets</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+        <button class="btn btn-sm" onclick="logSet('${key}', ${scaledSets}, ${ex.rest}, '${ex.name}')">＋ Log Set (${doneSets}/${scaledSets})</button>
+        <button class="btn btn-sm btn-outline" onclick="openFormModal(${idx})">▶ Form & Cues</button>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+  saveState();
+}
+
+function logSet(key, maxSets, restSec, exName) {
+  if (!document.getElementById("warmupCheck").checked) {
+    alert("⚠️ Mak's Coach: Complete the mandatory 5–8 min Warm-Up checklist first!");
+    return;
+  }
+  const current = state.completedSets[key] || 0;
+  if (current < maxSets) {
+    state.completedSets[key] = current + 1;
+    saveState();
+    renderWorkout();
+    startRestTimer(restSec);
+    speakText(`Set ${current + 1} of ${exName} complete. Rest for ${restSec} seconds and breathe smoothly.`);
+  }
+}
+
+let restInterval = null;
+function startRestTimer(seconds) {
+  clearInterval(restInterval);
+  let rem = seconds;
+  const disp = document.getElementById("timerDisplay");
+  const stat = document.getElementById("timerStatus");
+  stat.innerText = "⏳ RESTING — BREATHE DEEPLY";
+
+  restInterval = setInterval(() => {
+    rem--;
+    const m = String(Math.floor(rem / 60)).padStart(2, '0');
+    const s = String(rem % 60).padStart(2, '0');
+    disp.innerText = `${m}:${s}`;
+    if (rem === 10) speakText("10 seconds left. Prepare for your next controlled set.");
+    if (rem <= 0) {
+      clearInterval(restInterval);
+      stat.innerText = "🔥 START NEXT SET (EXHALE ON EFFORT)";
+      if (window.AndroidBridge) AndroidBridge.vibrate(400);
+      speakText("Rest complete. Begin your next set with smooth breathing.");
+    }
+  }, 1000);
+}
+
+function voiceCadence() {
+  speakText("Controlled tempo ready. Down two, one, exhale and lift one, two. Remember: never hold your breath, leave two to three reps in reserve.");
+}
+
+function speakText(txt) {
+  if (window.AndroidBridge) AndroidBridge.speak(txt);
+}
+
+function openFormModal(idx) {
+  const ex = WORKOUT_PLANS[state.phase][idx];
+  document.getElementById("modalTitle").innerText = ex.name;
+  document.getElementById("modalCues").innerText = ex.cues;
+  document.getElementById("videoContainer").innerHTML =
+    `<iframe src="https://www.youtube.com/embed/${ex.yt}?rel=0&modestbranding=1" allowfullscreen></iframe>`;
+
+  document.getElementById("btnReadAloud").onclick = () => speakText(ex.name + ". " + ex.cues);
+  document.getElementById("btnAskGemini").onclick = () => {
+    const prompt = `I am doing ${ex.name} (${ex.sets} sets of ${ex.reps}) in my Calisthenics + Hypertrophy plan. Give me safe posture cues, breathing rhythm (no breath-holding), and mistakes to avoid.`;
+    if (window.AndroidBridge) AndroidBridge.askGemini(prompt);
+  };
+  document.getElementById("formModal").classList.add("open");
+}
+
+function closeModal() {
+  document.getElementById("videoContainer").innerHTML = "";
+  document.getElementById("formModal").classList.remove("open");
+}
+
+function completeWorkoutSession() {
+  if (!state.punchedMeals["pre"]) {
+    alert("⚠️ Mak's Coach: Please punch your Pre-Workout Snack in the Diet tab first!");
+    return;
+  }
+  state.score.done += 1;
+  state.scaleFactor = 1.0;
+  document.getElementById("scaleFactorBadge").innerText = "100% Load";
+  state.unlockedDate = new Date().toISOString().slice(0,10);
+  if (window.AndroidBridge) {
+    AndroidBridge.unlockForToday("Workout Complete");
+    AndroidBridge.schedulePostWorkoutMealReminder(30);
+  }
+  updateScoreUI();
+  saveState();
+  alert("🎉 Mak's Coach: Workout Complete! Chrome, Edge, Brave & YouTube are UNLOCKED for today. A 30-min Post-Workout Meal alarm is set!");
+}
+
+// 15-Second Hold-to-Confirm Sick/Out/Sports
+let holdTimer = null;
+let holdProgress = 0;
+function startHold() {
+  clearInterval(holdTimer);
+  holdProgress = 0;
+  holdTimer = setInterval(() => {
+    holdProgress += 100 / 150;
+    document.getElementById("holdBar").style.width = Math.min(100, holdProgress) + "%";
+    if (holdProgress >= 100) {
+      clearInterval(holdTimer);
+      triggerDayStatus();
+    }
+  }, 100);
+}
+function cancelHold() {
+  clearInterval(holdTimer);
+  holdProgress = 0;
+  document.getElementById("holdBar").style.width = "0%";
+}
+function triggerDayStatus() {
+  const reason = document.getElementById("offReason").value;
+  state.unlockedDate = new Date().toISOString().slice(0,10);
+  if (reason === "sports") {
+    state.score.sports += 1;
+    speakText("Tennis or Badminton logged as active conditioning. Browsers unlocked.");
+  } else if (reason === "sick") {
+    state.score.sick += 1;
+    state.waterTarget = 4000;
+    state.scaleFactor = 0.75;
+    document.getElementById("scaleFactorBadge").innerText = "75% Recovery Load";
+    speakText("Sick day logged. Water goal increased by 500 milliliters and next workout scaled to 75 percent.");
+  } else {
+    state.score.sick += 1;
+    speakText("Day out logged. Workout queue shifted forward without skipping.");
+  }
+  if (window.AndroidBridge) AndroidBridge.unlockForToday(reason);
+  updateScoreUI();
+  renderDiet();
+  renderWorkout();
+  saveState();
+}
+
+function updateScoreUI() {
+  document.getElementById("scoreDone").innerText = state.score.done;
+  document.getElementById("scoreSports").innerText = state.score.sports;
+  document.getElementById("scoreSick").innerText = state.score.sick;
+  document.getElementById("scoreMiss").innerText = state.score.miss;
+}
+
+// Diet & Macros
+function renderDiet() {
+  const container = document.getElementById("mealSlots");
+  container.innerHTML = "";
+  let usedP = 0, usedC = 0, usedF = 0, usedK = 0;
+
+  PRESET_MEALS.forEach(m => {
+    const done = !!state.punchedMeals[m.id];
+    if (done) { usedP += m.p; usedC += m.c; usedF += m.f; usedK += m.k; }
+    const item = document.createElement("div");
+    item.className = "ex-item";
+    item.innerHTML = `
+      <div class="ex-header">
+        <div>
+          <div class="ex-name">${m.slot}</div>
+          <div class="ex-meta">${m.name}</div>
+          <div style="font-size:11px;color:var(--emerald-bright)"><b>${m.p}g P</b> • ${m.c}g C • ${m.f}g F • ${m.k} kcal</div>
+        </div>
+        <button class="btn btn-sm ${done ? 'btn-outline' : ''}" onclick="toggleMeal('${m.id}')">${done ? '✅ Punched' : 'Punch'}</button>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+
+  state.customMeals.forEach(cm => {
+    usedP += cm.p; usedC += cm.c; usedF += cm.f; usedK += cm.k;
+  });
+
+  document.getElementById("remP").innerText = Math.max(0, 125 - usedP) + "g";
+  document.getElementById("remC").innerText = Math.max(0, 190 - usedC) + "g";
+  document.getElementById("remF").innerText = Math.max(0, 55 - usedF) + "g";
+  document.getElementById("remK").innerText = Math.max(0, 1755 - usedK);
+
+  document.getElementById("waterText").innerText = `${state.water} / ${state.waterTarget} ml`;
+  document.getElementById("waterBar").style.width = Math.min(100, (state.water / state.waterTarget) * 100) + "%";
+}
+
+function toggleMeal(id) {
+  state.punchedMeals[id] = !state.punchedMeals[id];
+  saveState();
+  renderDiet();
+}
+
+function addCustomMeal() {
+  const name = document.getElementById("customFoodName").value.trim();
+  const p = Number(document.getElementById("customP").value) || 0;
+  const c = Number(document.getElementById("customC").value) || 0;
+  const f = Number(document.getElementById("customF").value) || 0;
+  const k = Number(document.getElementById("customK").value) || 0;
+  if (!name) return;
+  state.customMeals.push({ name, p, c, f, k });
+  document.getElementById("customFoodName").value = "";
+  saveState();
+  renderDiet();
+}
+
+function addWater(ml) {
+  state.water += ml;
+  saveState();
+  renderDiet();
+}
+
+// Weekly Progress Tracker
+function saveCheckIn() {
+  const w = document.getElementById("inWeight").value;
+  const wst = document.getElementById("inWaist").value;
+  const str = document.getElementById("inStrengthNote").value;
+  const rec = document.getElementById("inRecoveryNote").value;
+  if (!w && !wst && !str) return;
+  state.checkIns.unshift({
+    date: new Date().toISOString().slice(0,10),
+    w: w || "—", wst: wst || "—", str: str || "—", rec: rec || "—"
+  });
+  saveState();
+  renderCheckIns();
+}
+
+function renderCheckIns() {
+  const box = document.getElementById("checkInHistory");
+  box.innerHTML = state.checkIns.map(c => `
+    <div class="ex-item">
+      <b>📅 ${c.date}</b> — Weight: <b>${c.w} kg</b> | Waist: <b>${c.wst} cm</b><br>
+      💪 Strength: ${c.str}<br>
+      😴 Recovery/Notes: ${c.rec}
+    </div>
+  `).join("");
+}
+
+// Workspace (Pomodoro, Tasks, Scratchpad)
+let pomoTimer = null;
+function startPomo(mins) {
+  clearInterval(pomoTimer);
+  let sec = mins * 60;
+  pomoTimer = setInterval(() => {
+    sec--;
+    const m = String(Math.floor(sec / 60)).padStart(2, '0');
+    const s = String(sec % 60).padStart(2, '0');
+    document.getElementById("pomoDisplay").innerText = `${m}:${s}`;
+    if (sec <= 0) {
+      clearInterval(pomoTimer);
+      speakText("Pomodoro session complete.");
+    }
+  }, 1000);
+}
+function stopPomo() {
+  clearInterval(pomoTimer);
+  document.getElementById("pomoDisplay").innerText = "25:00";
+}
+
+function addTask() {
+  const inp = document.getElementById("taskInput");
+  if (!inp.value.trim()) return;
+  state.tasks.push({ text: inp.value.trim(), done: false });
+  inp.value = "";
+  saveState();
+  renderTasks();
+}
+function toggleTask(i) {
+  state.tasks[i].done = !state.tasks[i].done;
+  saveState();
+  renderTasks();
+}
+function renderTasks() {
+  document.getElementById("taskList").innerHTML = state.tasks.map((t, i) => `
+    <div class="ex-item" style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="${t.done ? 'text-decoration:line-through;opacity:0.5' : ''}">${t.text}</span>
+      <button class="btn btn-sm ${t.done ? 'btn-outline' : ''}" onclick="toggleTask(${i})">${t.done ? 'Done' : 'Check'}</button>
+    </div>
+  `).join("");
+}
+function saveScratch() {
+  state.scratch = document.getElementById("scratchpad").value;
+  saveState();
+}
+
+function openAccessibility() {
+  if (window.AndroidBridge) AndroidBridge.openAccessibilitySettings();
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// Init
+document.getElementById("phaseSelect").value = state.phase;
+document.getElementById("scratchpad").value = state.scratch || "";
+updateScoreUI();
+renderWorkout();
+renderDiet();
+renderCheckIns();
+renderTasks();
+updateTopLockBadge();
+</script>
+</body>
+</html>
